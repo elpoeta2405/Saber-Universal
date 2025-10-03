@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Saber Universal</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' stroke-width='1.5' stroke='white' fill='none' stroke-linecap='round' stroke-linejoin='round'><path d='M15.532 12.704a2.5 2.5 0 1 0-3.532-3.534a2.5 2.5 0 0 0 3.532 3.534 M12 14v7 M9 5.5v-1.5 M15 5.5v-1.5 M12 4v-1 M12 14c-2.333-1.333-4.667-1.333-7-1 M12 14c2.333-1.333 4.667-1.333 7-1 M5 13v-2.5 M19 13v-2.5 M3 10.5h1 M20 10.5h1' /></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(-45deg, #e0c3fc, #8ec5fc, #6a82fb, #a770ef);
+        background-size: 400% 400%;
+        animation: gradient-animation 15s ease infinite;
+      }
+      @keyframes gradient-animation {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      .text-shadow-custom {
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      }
+      .text-gradient {
+        background-image: linear-gradient(to right, #ffffff, #e0c3fc);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes slideInFromBottom {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes slideInFromRight {
+          from { opacity: 0; transform: translateX(30px); }
+          to { opacity: 1; transform: translateX(0); }
+      }
+      @keyframes glow {
+        0%, 100% { box-shadow: 0 0 5px -5px theme('colors.indigo.400'), 0 0 10px -5px theme('colors.indigo.300'); }
+        50% { box-shadow: 0 0 15px 0px theme('colors.indigo.400'), 0 0 25px 0px theme('colors.indigo.300'); }
+      }
+       @keyframes fancy-loader-spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .fancy-loader {
+        width: 48px;
+        height: 48px;
+        border: 2px solid #FFF;
+        border-radius: 50%;
+        display: inline-block;
+        position: relative;
+        box-sizing: border-box;
+        animation: fancy-loader-spin 1s linear infinite;
+      }
+      .fancy-loader::after {
+        content: '';  
+        box-sizing: border-box;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        border: 2px solid;
+        border-color: #a770ef transparent;
+      }
+      .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+      .animate-slide-in-bottom { animation: slideInFromBottom 0.6s ease-out forwards; }
+      .animate-slide-in-right { animation: slideInFromRight 0.6s ease-out forwards; }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.21.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="text-gray-800">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>

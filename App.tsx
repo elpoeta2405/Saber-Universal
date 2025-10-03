@@ -46,10 +46,16 @@ const App: React.FC = () => {
         setGameState('selecting_topic');
     }, []);
 
+    const handleApiKeyInvalid = useCallback(() => {
+        localStorage.removeItem('gemini_api_key');
+        setApiKey(null);
+        setGameState('api_key_setup');
+    }, []);
+
     const renderContent = () => {
         switch (gameState) {
             case 'in_quiz':
-                return selectedTopic && apiKey && <Quiz topic={selectedTopic} apiKey={apiKey} onFinish={handleQuizFinish} onBack={handleRestart} />;
+                return selectedTopic && apiKey && <Quiz topic={selectedTopic} apiKey={apiKey} onFinish={handleQuizFinish} onBack={handleRestart} onApiKeyInvalid={handleApiKeyInvalid} />;
             case 'results':
                 return <Results score={finalScore} totalQuestions={TOTAL_QUESTIONS_PER_TOPIC} onRestart={handleRestart} />;
             case 'selecting_topic':

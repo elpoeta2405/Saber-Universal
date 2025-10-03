@@ -16,11 +16,12 @@ interface QuizProps {
     apiKey: string;
     onFinish: (score: number) => void;
     onBack: () => void;
+    onApiKeyInvalid: () => void;
 }
 
 type QuizView = 'loading' | 'error' | 'question' | 'explanation';
 
-const Quiz: React.FC<QuizProps> = ({ topic, apiKey, onFinish, onBack }) => {
+const Quiz: React.FC<QuizProps> = ({ topic, apiKey, onFinish, onBack, onApiKeyInvalid }) => {
     const [quizSets, setQuizSets] = useState<QuizSet[] | null>(null);
     const [currentSetIndex, setCurrentSetIndex] = useState(0);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -30,6 +31,7 @@ const Quiz: React.FC<QuizProps> = ({ topic, apiKey, onFinish, onBack }) => {
     const [view, setView] = useState<QuizView>('loading');
     const [error, setError] = useState<string | null>(null);
     const [currentImage, setCurrentImage] = useState<'loading' | 'failed' | string | null>(null);
+    const [imageError, setImageError] = useState<string | null>(null);
 
     const { speak, cancel, isSpeaking } = useTextToSpeech();
     
@@ -45,15 +47,19 @@ const Quiz: React.FC<QuizProps> = ({ topic, apiKey, onFinish, onBack }) => {
                 setView('question');
             } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : 'Ocurrió un error desconocido.';
-                setError(errorMessage);
-                setView('error');
+                if (errorMessage.includes('La clave de API no es válida')) {
+                    onApiKeyInvalid();
+                } else {
+                    setError(errorMessage);
+                    setView('error');
+                }
             }
         };
         fetchQuiz();
         return () => {
             cancel(); // Stop any speech on component unmount
         };
-    }, [topic, apiKey, cancel]);
+    }, [topic, apiKey, cancel, onApiKeyInvalid]);
 
     const currentQuestion: Question | null = useMemo(() => {
         if (!quizSets) return null;
@@ -63,6 +69,7 @@ const Quiz: React.FC<QuizProps> = ({ topic, apiKey, onFinish, onBack }) => {
     useEffect(() => {
         if (view === 'question' && currentQuestion) {
             setCurrentImage('loading');
+            setImageError(null);
             generateImage(currentQuestion.imagePrompt, apiKey)
                 .then(imageData => {
                     setCurrentImage(`data:image/jpeg;base64,${imageData}`);
@@ -70,6 +77,7 @@ const Quiz: React.FC<QuizProps> = ({ topic, apiKey, onFinish, onBack }) => {
                 .catch(err => {
                     console.error(`Failed to generate image for question:`, err.message);
                     setCurrentImage('failed');
+                    setImageError(err.message);
                 });
         }
     }, [view, currentQuestion, apiKey]);
@@ -96,6 +104,7 @@ const Quiz: React.FC<QuizProps> = ({ topic, apiKey, onFinish, onBack }) => {
         setIsAnswered(false);
         setSelectedAnswer(null);
         setCurrentImage(null);
+        setImageError(null);
         setCurrentQuestionIndex(nextQuestionIndex);
         setCurrentSetIndex(nextSetIndex);
         setView('question');
@@ -192,9 +201,18 @@ const Quiz: React.FC<QuizProps> = ({ topic, apiKey, onFinish, onBack }) => {
                         </div>
                     )}
                     {currentImage === 'failed' && (
-                        <div className="flex flex-col items-center gap-2 text-slate-500">
+                        <div className="flex flex-col items-center gap-2 text-slate-500 p-4">
                             <QuestionMarkIcon className="w-10 h-10" />
-                            <span className="text-sm">Error al cargar la imagen</span>
+                             <span className="text-sm text-center font-semibold">
+                                {imageError && imageError.includes('cuota') 
+                                    ? 'Límite de imágenes alcanzado' 
+                                    : 'Error al cargar imagen'}
+                            </span>
+                             <span className="text-xs text-slate-600 text-center">
+                                {imageError && imageError.includes('cuota') 
+                                    ? 'Has excedido la cuota gratuita de la API.'
+                                    : 'El cuestionario continuará.'}
+                            </span>
                         </div>
                     )}
                     {currentImage && currentImage !== 'loading' && currentImage !== 'failed' && (

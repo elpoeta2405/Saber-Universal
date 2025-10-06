@@ -137,13 +137,17 @@ export const generateImage = async (prompt: string, apiKey: string): Promise<str
         return base64ImageBytes;
 
     } catch (error) {
-        console.error("Error generando la imagen:", error);
         const errorMessage = error instanceof Error ? error.message : 'Un error desconocido ocurrió';
-         if (errorMessage.includes('400')) {
-             throw new Error('La clave de API no es válida o ha caducado. Por favor, verifica tu clave.');
-        }
         if (errorMessage.includes('429') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
-            throw new Error('Se ha excedido la cuota de la API para generar imágenes. El juego continuará sin ellas.');
+            // This is a handled, expected error. Don't log as an error.
+            // Throw a specific code for the UI to handle.
+            throw new Error('QUOTA_EXCEEDED');
+        }
+        
+        // For any other unexpected error, log it and create a user-friendly message.
+        console.error("Error generando la imagen:", error);
+        if (errorMessage.includes('400')) {
+             throw new Error('La clave de API no es válida o ha caducado. Por favor, verifica tu clave.');
         }
         throw new Error(`No se pudo generar la imagen: ${errorMessage}`);
     }

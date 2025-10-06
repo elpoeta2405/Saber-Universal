@@ -3,7 +3,7 @@ import TopicSelector from './components/TopicSelector';
 import Quiz from './components/Quiz';
 import Results from './components/Results';
 import ApiKeySetup from './components/ApiKeySetup';
-import { Topic } from './types';
+import { Topic, QuizSet } from './types';
 import { TOTAL_QUESTIONS_PER_TOPIC } from './constants';
 
 type GameState = 'api_key_setup' |'selecting_topic' | 'in_quiz' | 'results';
@@ -13,6 +13,7 @@ const App: React.FC = () => {
     const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
     const [finalScore, setFinalScore] = useState(0);
     const [apiKey, setApiKey] = useState<string | null>(null);
+    const [completedQuizData, setCompletedQuizData] = useState<QuizSet[] | null>(null);
 
     useEffect(() => {
         const storedKey = localStorage.getItem('gemini_api_key');
@@ -35,14 +36,16 @@ const App: React.FC = () => {
         setGameState('in_quiz');
     }, []);
 
-    const handleQuizFinish = useCallback((score: number) => {
+    const handleQuizFinish = useCallback((score: number, quizData: QuizSet[]) => {
         setFinalScore(score);
+        setCompletedQuizData(quizData);
         setGameState('results');
     }, []);
 
     const handleRestart = useCallback(() => {
         setSelectedTopic(null);
         setFinalScore(0);
+        setCompletedQuizData(null);
         setGameState('selecting_topic');
     }, []);
 
@@ -57,7 +60,7 @@ const App: React.FC = () => {
             case 'in_quiz':
                 return selectedTopic && apiKey && <Quiz topic={selectedTopic} apiKey={apiKey} onFinish={handleQuizFinish} onBack={handleRestart} onApiKeyInvalid={handleApiKeyInvalid} />;
             case 'results':
-                return <Results score={finalScore} totalQuestions={TOTAL_QUESTIONS_PER_TOPIC} onRestart={handleRestart} />;
+                return <Results score={finalScore} totalQuestions={TOTAL_QUESTIONS_PER_TOPIC} onRestart={handleRestart} quizData={completedQuizData} />;
             case 'selecting_topic':
                  return <TopicSelector onSelectTopic={handleTopicSelect} />;
             case 'api_key_setup':

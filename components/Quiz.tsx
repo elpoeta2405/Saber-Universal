@@ -14,7 +14,7 @@ import BrainCircuitIcon from './icons/BrainCircuitIcon';
 interface QuizProps {
     topic: Topic;
     apiKey: string;
-    onFinish: (score: number) => void;
+    onFinish: (score: number, quizData: QuizSet[]) => void;
     onBack: () => void;
     onApiKeyInvalid: () => void;
 }
@@ -75,9 +75,10 @@ const Quiz: React.FC<QuizProps> = ({ topic, apiKey, onFinish, onBack, onApiKeyIn
                     setCurrentImage(`data:image/jpeg;base64,${imageData}`);
                 })
                 .catch(err => {
-                    console.error(`Failed to generate image for question:`, err.message);
+                    // The service layer now handles console logging for unexpected errors.
+                    // We just need to update the UI state.
                     setCurrentImage('failed');
-                    setImageError(err.message);
+                    setImageError(err.message); // This will be 'QUOTA_EXCEEDED' or another message
                 });
         }
     }, [view, currentQuestion, apiKey]);
@@ -89,7 +90,9 @@ const Quiz: React.FC<QuizProps> = ({ topic, apiKey, onFinish, onBack, onApiKeyIn
         const totalAnswered = currentSetIndex * QUESTIONS_PER_SET + currentQuestionIndex + 1;
         
         if (totalAnswered >= TOTAL_QUESTIONS_PER_TOPIC) {
-             onFinish(score);
+             if (quizSets) {
+                onFinish(score, quizSets);
+             }
              return;
         } 
         
@@ -109,7 +112,7 @@ const Quiz: React.FC<QuizProps> = ({ topic, apiKey, onFinish, onBack, onApiKeyIn
         setCurrentSetIndex(nextSetIndex);
         setView('question');
         
-    }, [currentQuestionIndex, currentSetIndex, score, onFinish, cancel]);
+    }, [currentQuestionIndex, currentSetIndex, score, onFinish, cancel, quizSets]);
 
     const handleAnswerSelect = useCallback((answer: string) => {
         if (isAnswered) return;
@@ -190,7 +193,19 @@ const Quiz: React.FC<QuizProps> = ({ topic, apiKey, onFinish, onBack, onApiKeyIn
         }
 
         return (
-             <div className="text-center p-6 md:p-8 bg-black/20 backdrop-blur-xl rounded-3xl shadow-2xl flex flex-col items-center border border-white/10 animate-fade-in max-w-lg mx-auto">
+             <div 
+                className={`p-6 md:p-8 bg-black/20 backdrop-blur-xl rounded-3xl shadow-2xl flex flex-col items-center border border-white/10 animate-fade-in max-w-lg mx-auto transform-gpu transition-all duration-300 ${topicDetails.shadowColor}`}
+                style={{ transformStyle: 'preserve-3d' }}
+                onMouseMove={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = e.clientX - rect.left - rect.width / 2;
+                    const y = e.clientY - rect.top - rect.height / 2;
+                    e.currentTarget.style.transform = `rotateY(${x / 20}deg) rotateX(${-y / 20}deg) scale(1.02)`;
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'rotateY(0deg) rotateX(0deg) scale(1)';
+                }}
+            >
                 <h1 className="text-3xl font-bold mb-4 text-slate-100">{title}</h1>
 
                 <div className="w-full aspect-video rounded-lg overflow-hidden bg-slate-900 flex items-center justify-center mb-4 border border-slate-700">
@@ -204,12 +219,12 @@ const Quiz: React.FC<QuizProps> = ({ topic, apiKey, onFinish, onBack, onApiKeyIn
                         <div className="flex flex-col items-center gap-2 text-slate-500 p-4">
                             <QuestionMarkIcon className="w-10 h-10" />
                              <span className="text-sm text-center font-semibold">
-                                {imageError && imageError.includes('cuota') 
+                                {imageError === 'QUOTA_EXCEEDED'
                                     ? 'Límite de imágenes alcanzado' 
                                     : 'Error al cargar imagen'}
                             </span>
                              <span className="text-xs text-slate-600 text-center">
-                                {imageError && imageError.includes('cuota') 
+                                {imageError === 'QUOTA_EXCEEDED' 
                                     ? 'Has excedido la cuota gratuita de la API.'
                                     : 'El cuestionario continuará.'}
                             </span>
@@ -240,23 +255,18 @@ const Quiz: React.FC<QuizProps> = ({ topic, apiKey, onFinish, onBack, onApiKeyIn
     }
 
     const getButtonClass = (option: string) => {
-        const baseClasses = "p-4 rounded-lg text-left text-slate-200 font-semibold border-2 transition-all duration-300";
+        const baseClasses = "p-4 rounded-lg text-left text-slate-200 font-semibold border-2 transition-all duration-300 transform-gpu shadow-lg";
 
-        // This is the specific state for "time is up"
-        // isAnswered is true, view is 'question', and no answer was selected by user
         if (isAnswered && selectedAnswer === null) { 
             const isCorrect = option === currentQuestion?.correctAnswer;
             if (isCorrect) {
-                // Highlight correct answer with a green color and a pulse animation
-                return `${baseClasses} bg-emerald-600/90 border-emerald-400 animate-pulse`;
+                return `${baseClasses} bg-emerald-600/90 border-emerald-400 animate-pulse shadow-emerald-400/30`;
             } else {
-                // Fade out other answers
-                return `${baseClasses} bg-slate-800/60 border-slate-700 opacity-50 cursor-not-allowed`;
+                return `p-4 rounded-lg text-left text-slate-200 font-semibold border-2 transition-all duration-300 bg-slate-800/60 border-slate-700 opacity-50 cursor-not-allowed`;
             }
         }
         
-        // Default state when not answered yet
-        return `${baseClasses} bg-slate-800/70 border-slate-700 hover:bg-slate-700/80 hover:border-slate-600`;
+        return `${baseClasses} bg-slate-800/70 border-slate-700 ${topicDetails.shadowColor}`;
     };
 
 
@@ -281,6 +291,17 @@ const Quiz: React.FC<QuizProps> = ({ topic, apiKey, onFinish, onBack, onApiKeyIn
                         onClick={() => handleAnswerSelect(option)}
                         disabled={isAnswered}
                         className={getButtonClass(option)}
+                        style={{ transformStyle: 'preserve-3d' }}
+                        onMouseMove={(e) => {
+                            if (isAnswered) return;
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const x = e.clientX - rect.left - rect.width / 2;
+                            const y = e.clientY - rect.top - rect.height / 2;
+                            e.currentTarget.style.transform = `rotateY(${x / 20}deg) rotateX(${-y / 20}deg) scale(1.05)`;
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'rotateY(0deg) rotateX(0deg) scale(1)';
+                        }}
                     >
                         <span>{option}</span>
                     </button>

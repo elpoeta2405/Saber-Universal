@@ -18,7 +18,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ onSelectTopic }) => {
                         <button
                             key={topic}
                             onClick={() => onSelectTopic(topic)}
-                            className={`p-6 rounded-2xl shadow-lg flex items-center justify-start space-x-4 text-left transition-all duration-300 transform-gpu hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-opacity-75 bg-slate-900/20 backdrop-blur-md border ${details.borderColor} focus:ring-violet-400/50`}
+                            className={`p-6 rounded-2xl shadow-xl flex items-center justify-start space-x-4 text-left transition-all duration-300 transform-gpu hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-opacity-75 bg-slate-900/20 backdrop-blur-md border ${details.borderColor} focus:ring-violet-400/50 ${details.shadowColor}`}
                             style={{ transformStyle: 'preserve-3d' }}
                             onMouseMove={(e) => {
                                 const rect = e.currentTarget.getBoundingClientRect();
@@ -36,6 +36,9 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({ onSelectTopic }) => {
                     );
                 })}
             </div>
+            <p className="text-xs text-slate-400 mt-12 text-shadow-custom">
+                Desarrollado por Ing. Carlos Hernandez
+            </p>
         </div>
     );
 };

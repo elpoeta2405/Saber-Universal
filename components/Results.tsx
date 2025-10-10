@@ -1,6 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { QuizSet } from '../types';
-import DownloadIcon from './icons/DownloadIcon';
+import React, { useState, useEffect } from 'react';
 
 declare const confetti: any;
 
@@ -8,10 +6,9 @@ interface ResultsProps {
     score: number;
     totalQuestions: number;
     onRestart: () => void;
-    quizData: QuizSet[] | null;
 }
 
-const Results: React.FC<ResultsProps> = ({ score, totalQuestions, onRestart, quizData }) => {
+const Results: React.FC<ResultsProps> = ({ score, totalQuestions, onRestart }) => {
     const [displayScore, setDisplayScore] = useState(0);
     const percentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
 
@@ -48,28 +45,6 @@ const Results: React.FC<ResultsProps> = ({ score, totalQuestions, onRestart, qui
             }, 500); // Small delay to let animations settle
         }
     }, [percentage]);
-
-    const handleDownload = useCallback(() => {
-        if (!quizData) return;
-
-        const allQuestions = quizData.flat();
-        let content = "Resumen del Cuestionario - Saber Universal\n\n";
-
-        allQuestions.forEach((q, index) => {
-            content += `Pregunta ${index + 1}: ${q.question}\n`;
-            content += `Explicación: ${q.explanation}\n\n`;
-        });
-
-        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'resumen-saber-universal.txt';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    }, [quizData]);
     
     const getFeedback = () => {
         if (percentage >= 90) return { title: '¡Maestro Universal!', message: 'Tu conocimiento es verdaderamente impresionante.', color: 'text-emerald-300' };
@@ -132,27 +107,16 @@ const Results: React.FC<ResultsProps> = ({ score, totalQuestions, onRestart, qui
                 </div>
             </div>
             <p className="text-xl font-semibold text-indigo-300 mb-8">{percentage}% Correcto</p>
-
-            <div className="w-full max-w-xs space-y-4">
-                 {quizData && (
-                    <button
-                        onClick={handleDownload}
-                        className="w-full px-8 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-bold text-base text-white transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2"
-                    >
-                       <DownloadIcon className="h-5 w-5" />
-                       <span>Descargar Resumen</span>
-                    </button>
-                )}
-                <button
-                    onClick={onRestart}
-                    className="w-full px-8 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-bold text-lg text-white transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 hover:shadow-indigo-400/50 hover:animate-[glow_2s_ease-in-out_infinite]"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h5M20 20v-5h-5M4 4l1.5 1.5A9 9 0 0121.5 13.5M20 20l-1.5-1.5A9 9 0 002.5 10.5" />
-                    </svg>
-                    <span>Jugar de Nuevo</span>
-                </button>
-            </div>
+            
+            <button
+                onClick={onRestart}
+                className="w-full max-w-xs px-8 py-4 bg-indigo-600 hover:bg-indigo-500 rounded-lg font-bold text-lg text-white transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 hover:shadow-indigo-400/50 hover:animate-[glow_2s_ease-in-out_infinite]"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h5M20 20v-5h-5M4 4l1.5 1.5A9 9 0 0121.5 13.5M20 20l-1.5-1.5A9 9 0 002.5 10.5" />
+                </svg>
+                <span>Jugar de Nuevo</span>
+            </button>
         </div>
     );
 };
